@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { CandlestickSeries, createChart, ColorType, Time } from 'lightweight-charts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+
 interface CandlestickData {
   date: string;
   open: number;
@@ -12,87 +12,38 @@ interface CandlestickData {
   predicted?: boolean;
 }
 
-interface CandlestickChartProps {
+interface LineChartProps {
   historicalData: CandlestickData[];
   predictionData: CandlestickData[];
 }
 
-export default function CandlestickChart({ historicalData, predictionData }: CandlestickChartProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  console.log('📊 Historical Data:', historicalData);
-  console.log('🤖 Prediction Data:', predictionData);
+export default function ClosePriceLineChart({ historicalData, predictionData }: LineChartProps) {
+  // Format ulang data: satu array, dua kolom: closeHistorical dan closePrediction
+  const connectedData = [
+    ...historicalData.map((d) => ({
+      date: d.date.split('T')[0], // Buang waktu agar konsisten
+      closeHistorical: d.close,
+      closePrediction: null,
+    })),
+    ...predictionData.map((d) => ({
+      date: d.date,
+      closeHistorical: null,
+      closePrediction: d.close,
+    })),
+  ];
 
-  useEffect(() => {
-    if (!chartContainerRef.current || historicalData.length === 0) return;
-
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: 400,
-      layout: {
-        background: { type: ColorType.Solid, color: '#111' },
-        textColor: '#ccc',
-      },
-      grid: {
-        vertLines: { color: '#333' },
-        horzLines: { color: '#333' },
-      },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-      },
-    });
-
-    const historicalSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
-      borderVisible: false,
-    });
-
-    const formattedHistorical = historicalData.map((item) => ({
-      time: Math.floor(new Date(item.date).getTime() / 1000) as Time,
-      open: item.open,
-      high: item.high,
-      low: item.low,
-      close: item.close,
-    }));
-
-    historicalSeries.setData(formattedHistorical);
-
-    if (predictionData.length > 0) {
-      const predictionSeries = chart.addSeries(CandlestickSeries, {
-        upColor: 'rgba(126, 56, 191, 0.6)',
-        downColor: 'rgba(126, 56, 191, 0.6)',
-        wickUpColor: 'rgba(126, 56, 191, 0.6)',
-        wickDownColor: 'rgba(126, 56, 191, 0.6)',
-        borderVisible: false,
-      });
-
-      const formattedPrediction = predictionData.map((item) => ({
-        time: Math.floor(new Date(item.date).getTime() / 1000) as Time,
-        open: item.open,
-        high: item.high,
-        low: item.low,
-        close: item.close,
-      }));
-
-      predictionSeries.setData(formattedPrediction);
-    }
-
-    chart.timeScale().fitContent(); // ➜ Dipanggil terakhir agar prediction ikut
-
-    const handleResize = () => {
-      chart.resize(chartContainerRef.current!.clientWidth, 400);
-      chart.timeScale().fitContent();
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.remove();
-    };
-  }, [historicalData, predictionData]);
-
-  return <div ref={chartContainerRef} className="w-full h-[400px]" />;
+  return (
+    <div className="w-full h-[400px] bg-zinc-900 rounded-xl p-4">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={connectedData}>
+          <XAxis dataKey="date" stroke="#ccc" />
+          <YAxis stroke="#ccc" />
+          <Tooltip contentStyle={{ backgroundColor: '#333', borderColor: '#888' }} labelStyle={{ color: '#fff' }} />
+          <Legend />
+          <Line type="monotone" dataKey="closeHistorical" stroke="#26a69a" name="Historical" dot={false} isAnimationActive={false} strokeWidth={2} connectNulls />
+          <Line type="monotone" dataKey="closePrediction" stroke="#7E38BF" name="Prediction" dot={{ r: 2 }} isAnimationActive={false} strokeWidth={2} connectNulls strokeDasharray="5 5" />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
