@@ -9,12 +9,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import CandlestickChart from './components/candlestick-chart';
 import { fetchStockHistory, fetchStockPrediction } from '@/lib/api';
+import CandlestickData from '@/types/stock';
 
 export default function StockPredictionApp() {
   const [symbol, setSymbol] = useState('AAPL');
   const [currentSymbol, setCurrentSymbol] = useState('AAPL');
-  const [stockData, setStockData] = useState<any[]>([]);
-  const [predictData, setPredictData] = useState<any[]>([]);
+  const [stockData, setStockData] = useState<CandlestickData[]>([]);
+  const [predictData, setPredictData] = useState<CandlestickData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

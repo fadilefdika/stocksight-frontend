@@ -1,16 +1,6 @@
 'use client';
-
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-
-interface CandlestickData {
-  date: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume?: number;
-  predicted?: boolean;
-}
+import CandlestickData from '@/types/stock';
 
 interface LineChartProps {
   historicalData: CandlestickData[];
